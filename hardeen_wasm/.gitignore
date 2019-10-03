@@ -1,0 +1,7 @@
+/target/**/*
+/target/*
+/pkg/**/*
+/pkg/*
+/Cargo.lock
+/.idea
+/.vscode

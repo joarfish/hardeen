@@ -1,0 +1,16 @@
+[package]
+name = "hardeen_core"
+version = "0.1.0"
+authors = ["Jonas Klein <kontakt@kleinbildfilm.net>"]
+edition = "2018"
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+im = {version="13.0.0", features = ["serde"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = "1.0"
+rand = { version = "0.7.0", features = ["wasm-bindgen"] }
+downcast-rs = "1.0.4"
+itertools = "0.8.0"

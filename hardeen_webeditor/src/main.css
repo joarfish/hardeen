@@ -1,0 +1,10 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+html, body, #application{
+    height: 100%;
+    overflow: hidden;
+    font-family: sans-serif;
+}

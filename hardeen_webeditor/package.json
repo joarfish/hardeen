@@ -1,0 +1,43 @@
+{
+  "name": "hardeen_webeditor",
+  "version": "0.1.0",
+  "description": "A web frontend for Hardeen",
+  "main": "dist/bundle.js",
+  "author": "kastenbutt (Jonas Klein)",
+  "license": "GPLv3",
+  "private": true,
+  "dependencies": {
+    "@babel/core": "^7.6.2",
+    "@emotion/core": "^10.0.17",
+    "@emotion/styled": "^10.0.17",
+    "@projectstorm/react-diagrams": "^6.0.1-beta.5",
+    "@types/react": "^16.9.3",
+    "babel-loader": "^8.0.6",
+    "closest": "^0.0.1",
+    "css-loader": "^3.2.0",
+    "dagre": "^0.8.4",
+    "lodash": "^4.17.15",
+    "mathjs": "^6.2.2",
+    "mobx": "^5.13.1",
+    "emotion": "^10.0.14",
+    "mobx-react": "^6.1.3",
+    "pathfinding": "^0.4.18",
+    "paths-js": "^0.4.10",
+    "react": "^16.10.0",
+    "react-dom": "^16.10.0",
+    "resize-observer-polyfill": "^1.5.1",
+    "style-loader": "^1.0.0",
+    "terser-webpack-plugin": "^2.1.2",
+    "ts-loader": "^6.0.4",
+    "typescript": "^3.5.3",
+    "webpack": "^4.38.0",
+    "webpack-bundle-analyzer": "^3.5.2",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "scripts": {
+    "start": "webpack",
+    "dev": "webpack-dev-server"
+  }
+}

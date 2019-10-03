@@ -1,0 +1,33 @@
+[package]
+name = "hardeen_wasm"
+version = "0.1.0"
+authors = ["Jonas Klein"]
+description = "Hardeen Core WASM Binding"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+hardeen_core={ path = "../hardeen_core" }
+serde = "^1.0.59"
+serde_derive = "^1.0.59"
+wasm-typescript-definition = "0.1.4"
+console_error_panic_hook = "0.1.6"
+
+[dependencies.wasm-bindgen]
+version = "^0.2"
+features = [
+    'serde-serialize'
+]
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+  'Document',
+  'Element',
+  'HtmlElement',
+  'Node',
+  'Window',
+  'SvgElement',
+  'SvgPoint'
+]
