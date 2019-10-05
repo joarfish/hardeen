@@ -1,9 +1,9 @@
 import {NodeModel} from '@projectstorm/react-diagrams';
 import {BaseModelOptions} from '@projectstorm/react-canvas-core';
-import {HardeenHandle, NodeType} from '../../../hardeen_wasm/pkg';
-import {OutputPort} from "./ports/OutputPort";
-import {MultipleInputPort} from "./ports/MultipleInputPort";
-import {SlottedInputPort} from "./ports/SlottedInputPort";
+import {HardeenHandle, NodeType} from '../../../../hardeen_wasm/pkg';
+import {OutputPort} from "../ports/OutputPort";
+import {MultipleInputPort} from "../ports/MultipleInputPort";
+import {SlottedInputPort} from "../ports/SlottedInputPort";
 
 export interface HardeenNodeModelOptions extends BaseModelOptions {
 	hardeenHandle: HardeenHandle;

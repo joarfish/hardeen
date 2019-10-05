@@ -15,8 +15,6 @@ class PortFactory extends AbstractModelFactory<OutputPort, DiagramEngine> {
 
     generateModel(event) {
 
-        console.log(event);
-
         if(this.type=="output-port") {
             return new OutputPort(event.initialConfig);
         }

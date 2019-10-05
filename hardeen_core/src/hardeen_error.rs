@@ -6,6 +6,7 @@ pub enum HardeenError {
     NodeInputTypeMismatch,
     NodeRunTypeMismatch,
     NodeOutputHandleInvalid,
+    NodeInputNotSatisfied,
     InvalidHandle,
     NodeTypeInvalid,
     GraphOutputNotSet,

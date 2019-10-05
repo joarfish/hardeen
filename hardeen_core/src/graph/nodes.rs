@@ -8,7 +8,6 @@ use super::parameters::*;
 
 use super::input_behaviours::*;
 use super::run_behaviours::*;
-use super::Graph;
 use super::SubgraphHandle;
 
 use crate::handled_vec::MarkedHandle;
@@ -19,8 +18,8 @@ pub type NodeHandle<T> = MarkedHandle<Node<T>>;
 
 #[derive(Serialize)]
 pub struct Node<T: Serialize> {
-    run_behaviour: RunBehaviour<T>,
-    input_behaviour: InputBehaviour<NodeHandle<T>>,
+    run_component: RunBehaviour<T>,
+    input_component: InputBehaviour<NodeHandle<T>>,
     output_nodes: HashSet<NodeHandle<T>>,
     #[serde(skip)]
     cached_output: RefCell<Option<Rc<T>>>,
@@ -37,40 +36,40 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn new_subgraph_processor_node(processor: Box<dyn SubgraphProcessor<T>>, handle: SubgraphHandle<T>) -> Self {
-        let input_behaviour = (*processor).build_input_behaviour();
+        let input_component = (*processor).build_input_behaviour();
 
         Self::new(
             RunBehaviour::SubgraphProcessor(processor, handle),
-            input_behaviour
+            input_component
         )
     }
 
     fn new(
-        run_behaviour: RunBehaviour<T>,
-        input_behaviour: InputBehaviour<NodeHandle<T>>
+        run_component: RunBehaviour<T>,
+        input_component: InputBehaviour<NodeHandle<T>>
     ) -> Self {
         Node {
-            run_behaviour,
-            input_behaviour,
+            run_component,
+            input_component,
             output_nodes: HashSet::new(),
             cached_output: RefCell::new(None),
         }
     }
 
     pub fn get_run_behaviour_mut(&mut self) -> &mut RunBehaviour<T> {
-        &mut self.run_behaviour
+        &mut self.run_component
     }
 
     pub fn get_run_behaviour(&self) -> &RunBehaviour<T> {
-        &self.run_behaviour
+        &self.run_component
     }
 
     pub fn get_input_behaviour(&self) -> &InputBehaviour<NodeHandle<T>> {
-        &self.input_behaviour
+        &self.input_component
     }
 
     pub fn get_processor_name(&self) -> &str {
-        match &self.run_behaviour {
+        match &self.run_component {
             RunBehaviour::Processor(p) => p.get_processor_name(),
             RunBehaviour::SubgraphProcessor(p,_) => p.get_processor_name(),
         }
@@ -81,7 +80,7 @@ impl<T: Serialize> Node<T> {
         parameter_name: &str,
         parameter_value: &str,
     ) -> Result<(), HardeenError> {
-        match &mut self.run_behaviour {
+        match &mut self.run_component {
             RunBehaviour::Processor(processor) => {
                 (*processor).set_parameter(parameter_name, parameter_value)
             }
@@ -92,7 +91,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn get_parameter(&self, parameter_name: &str) -> Result<String, HardeenError> {
-        match &self.run_behaviour {
+        match &self.run_component {
             RunBehaviour::Processor(processor) => {
                 (*processor).get_parameter(parameter_name)
             }
@@ -103,7 +102,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn get_parameters(&self) -> &[ProcessorParameter] {
-        match &self.run_behaviour {
+        match &self.run_component {
             RunBehaviour::Processor(processor) => {
                 (*processor).get_parameters()
             }
@@ -114,7 +113,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn is_parameter(&self, parameter_name: &str) -> bool {
-        match &self.run_behaviour {
+        match &self.run_component {
             RunBehaviour::Processor(processor) => {
                 (*processor).is_parameter(parameter_name)
             }
@@ -125,7 +124,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn is_input_satisfied(&self) -> bool {
-        return match &self.input_behaviour {
+        return match &self.input_component {
             InputBehaviour::Multiple(multiple_input) => multiple_input.is_input_satisfied(),
             InputBehaviour::Slotted(slotted_input) => slotted_input.is_input_satisfied(),
         };
@@ -147,7 +146,7 @@ impl<T: Serialize> Node<T> {
         input: &NodeHandle<T>,
         slot_number: usize,
     ) -> Result<(), HardeenError> {
-        match &mut self.input_behaviour {
+        match &mut self.input_component {
             InputBehaviour::Multiple(multiple_input) => {
                 multiple_input.connect_input(input)?;
                 Ok(())
@@ -160,7 +159,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn disconnect_input_node_slotted(&mut self, slot_number: usize) -> Result<(), HardeenError> {
-        match &mut self.input_behaviour {
+        match &mut self.input_component {
             InputBehaviour::Multiple(_multiple_input) => Err(HardeenError::NodeInputTypeMismatch),
             InputBehaviour::Slotted(slotted_input) => {
                 slotted_input.disconnect_input(slot_number)?;
@@ -173,7 +172,7 @@ impl<T: Serialize> Node<T> {
         &mut self,
         node_handle: &NodeHandle<T>,
     ) -> Result<(), HardeenError> {
-        return match &mut self.input_behaviour {
+        return match &mut self.input_component {
             InputBehaviour::Multiple(multiple_input) => {
                 multiple_input.disconnect_input(node_handle)?;
                 Ok(())
@@ -204,7 +203,7 @@ impl<T: Serialize> Node<T> {
     }
 
     pub fn get_all_input_handles(&self) -> Vec<NodeHandle<T>> {
-        return match &self.input_behaviour {
+        return match &self.input_component {
             InputBehaviour::Multiple(multiple_input) => multiple_input.get_all_input_handles(),
             InputBehaviour::Slotted(slotted_input) => slotted_input.get_all_input_handles(),
         };

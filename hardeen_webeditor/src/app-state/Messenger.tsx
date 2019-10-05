@@ -1,5 +1,5 @@
-import {HardeenHandle, NodeType} from "../../../hardeen_wasm/pkg";
-import { HardeenNodeModel } from "../hardeen-nodes/HardeenNodeModel";
+import {HardeenHandle, NodeType, HardeenGraphPath} from "../../../hardeen_wasm/pkg";
+import { HardeenNodeModel } from "../node-graph/nodes/HardeenNodeModel";
 
 export interface CreateNode {
     type: "CreateNode";
@@ -53,9 +53,28 @@ export interface MoveLevelUp {
     type: "MoveLevelUp"
 }
 
+export interface RunProcessors {
+    type: "RunProcessors"
+}
 
-type MessageType = "CreateNode" | "DeleteNode" | "CreateLink" | "DeleteLink" | "SaveAll" | "SetOutputNode" | "NodeSelected" | "SubgraphNodeSelected" | "MoveLevelUp";
-type Message = CreateNode | DeleteNode | NodeCreated | CreateLink | DeleteLink | SaveAll | SetOutputNode | NodeSelected | SubgraphNodeSelected | MoveLevelUp;
+export interface SwitchToSubgraph {
+    type: "SwitchToSubgraph",
+    node: "root" | HardeenNodeModel
+}
+
+export interface SwitchedToSubgraph {
+    type: "SwitchedToSubgraph",
+    parent_path: HardeenGraphPath
+}
+
+export interface SwitchToGraphPath {
+    type: "SwitchToGraphPath",
+    path: "root" | HardeenGraphPath
+}
+
+
+type MessageType = "CreateNode" | "DeleteNode" | "CreateLink" | "DeleteLink" | "SaveAll" | "SetOutputNode" | "NodeSelected" | "SubgraphNodeSelected" | "MoveLevelUp" | "RunProcessors" | "SwitchToSubgraph" | "SwitchedToSubgraph" | "SwitchToGraphPath";
+type Message = CreateNode | DeleteNode | NodeCreated | CreateLink | DeleteLink | SaveAll | SetOutputNode | NodeSelected | SubgraphNodeSelected | MoveLevelUp | RunProcessors | SwitchToSubgraph | SwitchedToSubgraph | SwitchToGraphPath;
 
 export default class Messenger {
 

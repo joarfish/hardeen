@@ -34,17 +34,18 @@ export class SlottedInputPort extends PortModel<SlottedInputPortGenerics> {
     deserialize(event: DeserializeEvent<this>) {
         super.deserialize(event);
         this.options.slotNumber = event.data.slotNumber;
+        this.options.maximumLinks = event.data.maximumLinks;
     }
 
     serialize() {
         return {
             ...super.serialize(),
-            slotNumber: this.options.slotNumber
+            slotNumber: this.options.slotNumber,
+            maximumLinks: this.options.maximumLinks
         };
     }
 
     canLinkToPort(port: PortModel): boolean {
-
         if(port instanceof OutputPort) {
             if(this.getOptions().maximumLinks > Object.values(this.getLinks()).length) {
                 return true;

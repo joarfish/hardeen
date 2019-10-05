@@ -7,7 +7,7 @@ pub use self::handles::*;
 use std::vec::Vec;
 
 use serde::Serialize;
-use serde::ser::{SerializeSeq, SerializeMap, Serializer};
+use serde::ser::{SerializeMap, Serializer};
 
 #[derive(Debug)]
 pub enum HandledVecError {

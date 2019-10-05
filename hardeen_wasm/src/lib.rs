@@ -1,40 +1,22 @@
+#![allow(dead_code)]
+
 extern crate wasm_bindgen;
 extern crate hardeen_core;
 extern crate serde;
 
-#[macro_use]
 extern crate serde_derive;
 
 extern crate console_error_panic_hook;
 
 use std::vec::Vec;
-use std::collections::HashMap;
 use std::rc::Rc;
-
-macro_rules! map(
-    { $($key:expr => $value:expr),+ } => {
-        {
-            let mut m = ::std::collections::HashMap::new();
-            $(
-                m.insert($key, $value);
-            )+
-            m
-        }
-     };
-);
 
 use wasm_bindgen::prelude::*;
 
 use hardeen_core::*;
-use hardeen_core::Graph;
-use hardeen_core::HandleIterator;
-use hardeen_core::StdVec;
 use hardeen_core::NodeHandle;
 use hardeen_core::Handle;
-use wasm_bindgen::JsCast;
-
-use serde::Serialize;
-
+use hardeen_core::HardeenError;
 
 
 /* This is still reeeeaaaally inconvenient: */
@@ -114,7 +96,9 @@ export type NodeType = {
 "#;
 
 
+
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 pub struct HardeenHandle {
     index: usize,
     generation: usize,
@@ -122,6 +106,7 @@ pub struct HardeenHandle {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 impl HardeenHandle {
     pub fn new(index: usize, generation: usize, nodeType: &str) -> Self {
         HardeenHandle {
@@ -136,45 +121,52 @@ impl HardeenHandle {
     }
 }
 
-/*
 #[wasm_bindgen]
-#[derive(Serialize, Clone)]
-pub struct HardeenGraphHandle {
-    index: usize,
-    generation: usize,
+#[allow(non_snake_case)]
+pub struct HardeenResult {
+    resultType: String
 }
 
-impl Handle for HardeenGraphHandle {
-    fn new(index: usize, generation: usize) -> Self {
-        HardeenGraphHandle {
-            index,
-            generation
+#[allow(non_snake_case)]
+#[wasm_bindgen]
+impl HardeenResult {
+
+    pub fn ok() -> Self {
+        HardeenResult {
+            resultType: String::from("Ok")
         }
     }
 
-    fn get_generation(&self) -> usize {
-        self.generation
+    fn new(resultType: &str) -> Self {
+        HardeenResult {
+            resultType: String::from(resultType)
+        }
     }
 
-    fn get_index(&self) -> usize {
-        self.index
+    pub fn getResultType(&self) -> String {
+        self.resultType.clone()
     }
+}
 
-    fn get(&self) -> (usize, usize) {
-        (self.index, self.generation)
+impl std::convert::From<HardeenError> for HardeenResult {
+    fn from(error: hardeen_core::HardeenError) -> HardeenResult {
+        match error {
+            HardeenError::ErrorProcessingNode => HardeenResult::new("ErrorProcessingNode"),
+            HardeenError::ExposedParameterDoesNotExist => HardeenResult::new("ExposedParameterDoesNotExist"),
+            HardeenError::GraphOutputNotSet => HardeenResult::new("GraphOutputNotSet"),
+            _ => HardeenResult::new("UnknownError")
+        }
     }
-}*/
+}
+
 
 #[wasm_bindgen]
-struct HardeenCoreInterface {
+#[allow(non_snake_case)]
+pub struct HardeenCoreInterface {
     nodeTypes: Vec<ProcessorTypeInfo>,
     lastResult: Option<Rc<GeometryWorld>>,
     graph: Graph<GeometryWorld>
-   // graphs: HandledVec<HardeenGraphHandle, StdVec<Graph<GeometryWorld>>>
 }
-
-//type HardeenGraph = Graph<GeometryWorld>;
-
 
 #[wasm_bindgen]
 pub struct HardeenGraphPath {
@@ -208,7 +200,6 @@ impl HardeenCoreInterface {
             ],
             lastResult: None,
             graph: Graph::new()
-            //graphs: HandledVec::new()
         }
     }
 
@@ -246,6 +237,18 @@ impl HardeenCoreInterface {
         }
     }
 
+    pub fn hash_graph_path(&self, graph_path: &HardeenGraphPath) -> JsValue {
+
+        let mut parent = &self.graph;
+        let mut hash = String::from("r");
+        for subgraph_handle in graph_path.path.iter() {
+            parent = parent.get_subgraph(subgraph_handle).unwrap();
+            hash.push_str(&subgraph_handle.get_index().to_string());
+            hash.push_str(&subgraph_handle.get_generation().to_string());
+        }
+        JsValue::from(hash)
+    }
+
     pub fn get_graph_path(&self, parent_path: &HardeenGraphPath, handle: &HardeenHandle) -> HardeenGraphPath {
         let graph = self.get_subgraph_from_path(parent_path);
         let subgraph_handle = graph.get_subgraph_handle(&NodeHandle::new(handle.index, handle.generation)).unwrap();
@@ -254,6 +257,15 @@ impl HardeenCoreInterface {
 
         HardeenGraphPath {
             path
+        }
+    }
+
+    pub fn get_output_node(&self, path: &HardeenGraphPath) -> Option<HardeenHandle> {
+        let graph = self.get_subgraph_from_path(path);
+
+        match graph.get_output_node_handle() {
+            Some(handle) => Some(HardeenHandle::new(handle.get_index(), handle.get_generation(), "unknown")),
+            None => None
         }
     }
 
@@ -268,6 +280,7 @@ impl HardeenCoreInterface {
         graph.is_node_subgraph_processor(&NodeHandle::new(handle.index, handle.generation)).unwrap()
     }
 
+    #[allow(non_snake_case)]
     pub fn add_processor_node(&mut self, path: &HardeenGraphPath, typeName: &str) -> HardeenHandle {
         let graph = self.get_subgraph_from_path_mut(path);
         let handle = graph.add_processor_node_by_type(typeName);
@@ -275,51 +288,66 @@ impl HardeenCoreInterface {
         HardeenHandle::new(handle.get_index(), handle.get_generation(), typeName)
     }
 
-    pub fn remove_node(&mut self, path: &HardeenGraphPath, handle: HardeenHandle) {
+    pub fn remove_node(&mut self, path: &HardeenGraphPath, handle: HardeenHandle) -> HardeenResult {
         let graph = self.get_subgraph_from_path_mut(path);
-        graph.remove_node(NodeHandle::new(handle.index, handle.generation));
+        match graph.remove_node(NodeHandle::new(handle.index, handle.generation)) {
+                Ok(()) => HardeenResult::ok(),
+                Err(error) => HardeenResult::from(error)
+        }
     }
 
-    pub fn connect_nodes_slotted(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle, slot: usize) {
+    pub fn connect_nodes_slotted(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle, slot: usize) -> HardeenResult {
         let graph = self.get_subgraph_from_path_mut(path);
-        graph.connect_to_slot(
+        match graph.connect_to_slot(
             &NodeHandle::new(from.index, from.generation), 
-            &NodeHandle::new(to.index, to.generation), slot);
+            &NodeHandle::new(to.index, to.generation), slot) {
+                Ok(()) => HardeenResult::ok(),
+                Err(error) => HardeenResult::from(error)
+        }
     }
 
-    pub fn connect_nodes(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle) {
+    pub fn connect_nodes(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle) -> HardeenResult {
         let graph = self.get_subgraph_from_path_mut(path);
-        graph.connect(
+        match graph.connect(
             &NodeHandle::new(from.index, from.generation),
-            &NodeHandle::new(to.index, to.generation));
+            &NodeHandle::new(to.index, to.generation)) {
+                Ok(()) => HardeenResult::ok(),
+                Err(error) => HardeenResult::from(error)
+        }
     }
 
-    pub fn disconnect_nodes_slotted(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle, slot: usize) {
+    pub fn disconnect_nodes_slotted(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle, slot: usize) -> HardeenResult {
         let graph = self.get_subgraph_from_path_mut(path);
-        graph.disconnect_from_slot(
+        match graph.disconnect_from_slot(
             &NodeHandle::new(from.index, from.generation), 
-            &NodeHandle::new(to.index, to.generation), slot);
+            &NodeHandle::new(to.index, to.generation), slot) {
+                Ok(()) => HardeenResult::ok(),
+                Err(error) => HardeenResult::from(error)
+        }
     }
 
-    pub fn disconnect_nodes(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle) {
+    pub fn disconnect_nodes(&mut self, path: &HardeenGraphPath, from: &HardeenHandle, to: &HardeenHandle)  -> HardeenResult {
         let graph = self.get_subgraph_from_path_mut(path);
-        graph.disconnect(
+        match graph.disconnect(
             &NodeHandle::new(from.index, from.generation),
-            &NodeHandle::new(to.index, to.generation));
+            &NodeHandle::new(to.index, to.generation)) {
+                Ok(()) => HardeenResult::ok(),
+                Err(error) => HardeenResult::from(error)
+        }
     }
 
-    pub fn set_node_parameter(&mut self, path: &HardeenGraphPath, handle: &HardeenHandle, parameter: &str, value: &str) -> bool {
+    pub fn set_node_parameter(&mut self, path: &HardeenGraphPath, handle: &HardeenHandle, parameter: &str, value: &str) -> HardeenResult {
         let h_handle = NodeHandle::new(handle.index, handle.generation);
         let graph = self.get_subgraph_from_path_mut(path);
 
-        if let Ok(node) = graph.get_node_mut(&h_handle)
-            {
-                node.set_parameter(parameter, value);
-                graph.invalidate_cache(&h_handle);
-                return true;
+        if let Ok(node) = graph.get_node_mut(&h_handle) {
+            if let Err(error) = node.set_parameter(parameter, value) {
+                return HardeenResult::from(error);
             }
+            graph.invalidate_cache(&h_handle);
+        }
 
-        return false;
+        HardeenResult::ok()
     }
 
      pub fn get_node_parameter(&mut self, path: &HardeenGraphPath, handle: &HardeenHandle, parameter: &str) -> JsValue {
@@ -338,7 +366,7 @@ impl HardeenCoreInterface {
 
     pub fn run_processors(&mut self, path: &HardeenGraphPath) -> JsValue {
         let graph = self.get_subgraph_from_path_mut(path);
-        if let Ok(result) = graph.process_graph_output() {
+        if let Ok(result) = graph.process_graph_output(true) {
             self.lastResult = Some(result.clone());
             return JsValue::from_serde(&(*result)).unwrap()
         }
@@ -355,10 +383,10 @@ impl HardeenCoreInterface {
     }
 
     pub fn get_processor_parameters(&mut self, path: &HardeenGraphPath, handle: &HardeenHandle) -> JsValue {
-        let hHandle = NodeHandle::new(handle.index, handle.generation);
+        let handle = NodeHandle::new(handle.index, handle.generation);
         let graph = self.get_subgraph_from_path_mut(path);
 
-        if let Ok(node) = graph.get_node(&hHandle)
+        if let Ok(node) = graph.get_node(&handle)
         {
             return JsValue::from_serde(node.get_parameters()).unwrap();
         }
@@ -381,13 +409,4 @@ impl HardeenCoreInterface {
 
         false
     }
-
-    /*
-    pub fn get_shape_iterator(&self) -> Result<ShapeHandleIterator, ()> {
-        if let Some(world) = &self.lastResult {
-            Ok((*world).get_shape_iterator())
-        }
-
-        Err(())
-    }*/
 }

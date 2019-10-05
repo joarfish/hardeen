@@ -134,9 +134,9 @@ macro_rules! create_processor {
                 parse_input_behaviour!($input_behaviour, $input_behaviour_parameter)
             }
 
-
+            #[allow(unused_variables)]
             fn set_parameter(&mut self, parameter_name: &str, value: &str) -> Result<(), HardeenError> {
-
+                
                 match parameter_name {
                     $(
                         stringify!($param) => {
@@ -206,7 +206,7 @@ impl CreateRectangle {
 
 impl Processor<GeometryWorld> for CreateRectangle {
 
-    fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
+    fn run(&self, _input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
         let mut world = GeometryWorld::new();
         let rect = world.create_shape(true);
         let mut points = Vec::new();
@@ -215,15 +215,11 @@ impl Processor<GeometryWorld> for CreateRectangle {
                                                                     self.position.1 - self.height / 2.0))));
         points.push(world.create_point(Point::new_linear(Position(  self.position.0 + self.width / 2.0, 
                                                                     self.position.1 - self.height / 2.0))));
-        let tp1 = world.create_point(Point::new_linear(Position(  self.position.0 + self.width / 2.0,
-                                                                    self.position.1 + self.height / 2.0)));
-
         points.push(world.create_point(Point::new_linear(Position(  self.position.0 + self.width / 2.0,
                                                                   self.position.1 + self.height / 2.0))));
         points.push(world.create_point(Point::new_linear(Position(  self.position.0 - self.width / 2.0,
                                                                     self.position.1 + self.height / 2.0))));
 
-        world.remove_point(tp1);
         world.add_points_to_shape(points, &rect);
 
         Rc::from(world)
@@ -254,7 +250,6 @@ impl RandomTangents {
 impl Processor<GeometryWorld> for RandomTangents {
 
     fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
-        let in_world = &(*input[0]);
         let mut world = (*input[0]).clone();
         let mut rng = rand::thread_rng();
 
@@ -289,9 +284,7 @@ impl SmoothTangents {
 impl Processor<GeometryWorld> for SmoothTangents {
 
     fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
-        let in_world = &(*input[0]);
         let mut world = (*input[0]).clone();
-        let mut rng = rand::thread_rng();
 
         let mut iter = (*input[0]).get_shape_handle_iterator();
         while let Some(shape_handle) = iter.next() {
@@ -313,7 +306,7 @@ impl Processor<GeometryWorld> for SmoothTangents {
                 updated_point.out_tangent = p2.position + (p3.position - p1.position) * Position(self.strength, self.strength);
                 updated_point.in_tangent = p2.position + (p1.position - p3.position) * Position(self.strength, self.strength);
 
-                world.set_point(handles.1, updated_point);
+                world.set_point(handles.1, updated_point).expect("Point could not be set!");
             };
 
             if shape.is_closed() {
@@ -353,7 +346,6 @@ impl Scale {
 impl Processor<GeometryWorld> for Scale {
 
     fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
-        let in_world = &(*input[0]);
         let mut world = (*input[0]).clone();
 
         world.mutate_all_points(| p: &mut Point | {
@@ -389,7 +381,7 @@ impl ScatterPoints {
 
 impl Processor<GeometryWorld> for ScatterPoints {
 
-    fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
+    fn run(&self, _input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
         let mut world = GeometryWorld::new();
         let mut rng = rand::thread_rng();
 
@@ -460,7 +452,7 @@ impl Empty {
 
 impl Processor<GeometryWorld> for Empty {
 
-    fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
+    fn run(&self, _input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
         Rc::from(GeometryWorld::new())
     }
 }
@@ -532,14 +524,14 @@ impl Processor<GeometryWorld> for Merge {
 create_processor!(Merge, (MultipleInput, true), 2, []);
 
 pub struct CopyPointsAndOffset {
-    offsetPosition: Position
+    offset_position: Position
 }
 
 impl CopyPointsAndOffset {
 
     pub fn new() -> Self {
         CopyPointsAndOffset {
-            offsetPosition: Position(0.0,0.0)
+            offset_position: Position(0.0,0.0)
         }
     }
 
@@ -553,7 +545,7 @@ impl Processor<GeometryWorld> for CopyPointsAndOffset {
         let mut iter = (*input[0]).get_point_iterator();
         while let Some(point) = iter.next() {
             let mut copied_point = point.clone();
-            copied_point.position = point.position + self.offsetPosition;
+            copied_point.position = point.position + self.offset_position;
             world.create_point(copied_point);
         }
 
@@ -563,13 +555,13 @@ impl Processor<GeometryWorld> for CopyPointsAndOffset {
 }
 
 create_processor!(CopyPointsAndOffset, (SlottedInput,1), 1, [
-    offsetPosition => (Position, Position(0.0,0.0))
+    offset_position => (Position, Position(0.0,0.0))
 ]);
 
 pub struct CopyPointsAndRandomOffset {
-    minOffset: Position,
-    maxOffset: Position,
-    groupName: String,
+    min_offset: Position,
+    max_offset: Position,
+    group_name: String,
     group: bool,
     iterations: u32
 }
@@ -578,9 +570,9 @@ impl CopyPointsAndRandomOffset {
 
     pub fn new() -> Self {
         CopyPointsAndRandomOffset {
-            minOffset: Position(0.0,0.0),
-            maxOffset: Position(0.0,0.0),
-            groupName: String::from("all"),
+            min_offset: Position(0.0,0.0),
+            max_offset: Position(0.0,0.0),
+            group_name: String::from("all"),
             group: true,
             iterations: 1
         }
@@ -593,7 +585,7 @@ impl Processor<GeometryWorld> for CopyPointsAndRandomOffset {
     fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
         let mut world = (*input[0]).clone();
 
-        let group_handle = &(*input[0]).get_group_by_name(&self.groupName).unwrap();
+        let group_handle = &(*input[0]).get_group_by_name(&self.group_name).unwrap();
         let group = (*input[0]).get_group(&group_handle).unwrap();
 
         /*
@@ -602,8 +594,8 @@ impl Processor<GeometryWorld> for CopyPointsAndRandomOffset {
         });*/
 
         let mut rng = rand::thread_rng();
-        let dx_range : f32 = self.maxOffset.0 - self.minOffset.0;
-        let dy_range : f32 = self.maxOffset.1 - self.minOffset.1;
+        let dx_range : f32 = self.max_offset.0 - self.min_offset.0;
+        let dy_range : f32 = self.max_offset.1 - self.min_offset.1;
 
         for (c, point_handle) in group.points.iter().enumerate() {
 
@@ -621,8 +613,8 @@ impl Processor<GeometryWorld> for CopyPointsAndRandomOffset {
             for _ in 0..self.iterations {
                 let mut copied_point = last_point.clone();
 
-                let dx : f32 = rng.gen::<f32>() * dx_range + self.minOffset.0 ;
-                let dy : f32 = rng.gen::<f32>() * dy_range + self.minOffset.1;
+                let dx : f32 = rng.gen::<f32>() * dx_range + self.min_offset.0 ;
+                let dy : f32 = rng.gen::<f32>() * dy_range + self.min_offset.1;
                 copied_point.position = last_point.position + Position(dx,dy);
                 let point_handle = world.create_point(copied_point.clone());
                 last_point = copied_point;
@@ -640,9 +632,9 @@ impl Processor<GeometryWorld> for CopyPointsAndRandomOffset {
 }
 
 create_processor!(CopyPointsAndRandomOffset, (SlottedInput,1), 1, [
-    minOffset => (Position, Position(0.0,0.0)),
-    maxOffset => (Position, Position(0.0,0.0)),
-    groupName => (String, "all"),
+    min_offset => (Position, Position(0.0,0.0)),
+    max_offset => (Position, Position(0.0,0.0)),
+    group_name => (String, "all"),
     group => (bool, true),
     iterations => (u32, 1)
 ]);
@@ -668,7 +660,7 @@ impl Processor<GeometryWorld> for SortPointsX {
         let mut world = (*input[0]).clone();
         let group_handle = (*input)[0].get_group_by_name("all").unwrap();
 
-        let mut group = world.get_group_mut(&group_handle).unwrap();
+        let group = world.get_group_mut(&group_handle).unwrap();
 
         group.points.sort_by(|handle_p1, handle_p2| {
 
@@ -715,7 +707,7 @@ impl Processor<GeometryWorld> for SortPointsY {
         let mut world = (*input[0]).clone();
         let group_handle = (*input)[0].get_group_by_name("all").unwrap();
 
-        let mut group = world.get_group_mut(&group_handle).unwrap();
+        let group = world.get_group_mut(&group_handle).unwrap();
 
         group.points.sort_by(|handle_p1, handle_p2| {
 
@@ -743,14 +735,14 @@ impl Processor<GeometryWorld> for SortPointsY {
 create_processor!(SortPointsY, (SlottedInput,1), 1, []);
 
 pub struct CreateShapeFromGroup {
-    groupName: String,
+    group_name: String,
     closed: bool
 }
 
 impl CreateShapeFromGroup {
     pub fn new() -> Self {
         CreateShapeFromGroup {
-            groupName: String::from("all"),
+            group_name: String::from("all"),
             closed: false
         }
     }
@@ -764,7 +756,7 @@ impl Processor<GeometryWorld> for CreateShapeFromGroup {
         let mut world = (*input[0]).clone();
 
         let shape_handle = world.create_shape(self.closed);
-        let group_handle = (*input[0]).get_group_by_name(&self.groupName).unwrap();
+        let group_handle = (*input[0]).get_group_by_name(&self.group_name).unwrap();
         let group = (*input[0]).get_group(&group_handle).unwrap();
 
         world.add_points_to_shape(group.points.clone(), &shape_handle);
@@ -774,7 +766,7 @@ impl Processor<GeometryWorld> for CreateShapeFromGroup {
 }
 
 create_processor!(CreateShapeFromGroup, (SlottedInput,1), 1, [
-    groupName => (String, "all"),
+    group_name => (String, "all"),
     closed => (bool, false)
 ]);
 
@@ -819,14 +811,14 @@ create_processor!(CreateShapeFromAllGroups, (SlottedInput,1), 1, [
 
 pub struct Translate {
     offset: Position,
-    groupName: String
+    group_name: String
 }
 
 impl Translate {
     pub fn new() -> Self {
         Translate {
             offset: Position(0.0,0.0),
-            groupName: String::from("all")
+            group_name: String::from("all")
         }
     }
 
@@ -836,7 +828,7 @@ impl Processor<GeometryWorld> for Translate {
 
     fn run(&self, input : Vec<Rc<GeometryWorld>>) -> Rc<GeometryWorld> {
         let mut world = (*input[0]).clone();
-        let group_handle = &world.get_group_by_name(&self.groupName).unwrap();
+        let group_handle = &world.get_group_by_name(&self.group_name).unwrap();
 
         world.mutate_all_points_in_group(group_handle, |p| {
             p.position = p.position + self.offset;
@@ -848,21 +840,21 @@ impl Processor<GeometryWorld> for Translate {
 
 create_processor!(Translate, (SlottedInput,1), 1, [
     offset => (Position, Position(0.0,0.0)),
-    groupName => (String, "all")
+    group_name => (String, "all")
 ]);
 
 pub struct RandomTranslate {
-    minOffset: Position,
-    maxOffset: Position,
-    groupName: String
+    min_offset: Position,
+    max_offset: Position,
+    group_name: String
 }
 
 impl RandomTranslate {
     pub fn new() -> Self {
         RandomTranslate {
-            minOffset: Position(0.0,0.0),
-            maxOffset: Position(0.0,0.0),
-            groupName: String::from("all")
+            min_offset: Position(0.0,0.0),
+            max_offset: Position(0.0,0.0),
+            group_name: String::from("all")
         }
     }
 
@@ -875,15 +867,15 @@ impl Processor<GeometryWorld> for RandomTranslate {
 
         let mut rng = rand::thread_rng();
 
-        let group_handle = &world.get_group_by_name(&self.groupName).unwrap();
+        let group_handle = &world.get_group_by_name(&self.group_name).unwrap();
 
         world.mutate_all_points_in_group(group_handle, |p| {
-            let dx_range : f32 = self.maxOffset.0 - self.minOffset.0;
-            let dy_range : f32 = self.maxOffset.1 - self.minOffset.1;
+            let dx_range : f32 = self.max_offset.0 - self.min_offset.0;
+            let dy_range : f32 = self.max_offset.1 - self.min_offset.1;
 
 
-            let dx : f32 = rng.gen::<f32>() * dx_range + self.minOffset.0 ;
-            let dy : f32 = rng.gen::<f32>() * dy_range + self.minOffset.1;
+            let dx : f32 = rng.gen::<f32>() * dx_range + self.min_offset.0 ;
+            let dy : f32 = rng.gen::<f32>() * dy_range + self.min_offset.1;
 
             p.position = p.position + Position(dx,dy);
         });
@@ -893,20 +885,20 @@ impl Processor<GeometryWorld> for RandomTranslate {
 }
 
 create_processor!(RandomTranslate, (SlottedInput,1), 1, [
-    minOffset => (Position, Position(0.0,0.0)),
-    maxOffset => (Position, Position(0.0,0.0)),
-    groupName => (String, String::from("all"))
+    min_offset => (Position, Position(0.0,0.0)),
+    max_offset => (Position, Position(0.0,0.0)),
+    group_name => (String, String::from("all"))
 ]);
 
 
 pub struct InstanceOnPoints {
-    groupName: String
+    group_name: String
 }
 
 impl InstanceOnPoints {
     pub fn new() -> Self {
         InstanceOnPoints {
-            groupName: String::from("all")
+            group_name: String::from("all")
         }
     }
 }
@@ -914,19 +906,22 @@ impl InstanceOnPoints {
 impl SubgraphProcessor<GeometryWorld> for InstanceOnPoints {
     fn run(&self, input : Vec<Rc<GeometryWorld>>, subgraph: &Graph<GeometryWorld>) -> Rc<GeometryWorld> {
         let mut world = GeometryWorld::new();
-
-        let subgraph_result = subgraph.process_graph_output().unwrap();
-        let instance_point_world = &(*input[0]);
         
-        for instance_point in instance_point_world.get_point_iterator() {
+        let instance_point_world = &(*input[0]);
 
-            let mut instance = (*subgraph_result).clone();
+        if subgraph.is_output_node_set() {
+            for instance_point in instance_point_world.get_point_iterator() {
 
-            instance.mutate_all_points( |p| {
-                p.position = p.position + instance_point.position;
-            });
+                let subgraph_result = subgraph.process_graph_output(false).unwrap();
 
-            world.merge(&instance);
+                let mut instance = (*subgraph_result).clone();
+
+                instance.mutate_all_points( |p| {
+                    p.position = p.position + instance_point.position;
+                });
+
+                world.merge(&instance);
+            }
         }
 
         Rc::new(world)
@@ -934,5 +929,5 @@ impl SubgraphProcessor<GeometryWorld> for InstanceOnPoints {
 }
 
 create_processor!(InstanceOnPoints, (SlottedInput,1), 1, [
-    groupName => (String, String::from("all"))
+    group_name => (String, String::from("all"))
 ]);

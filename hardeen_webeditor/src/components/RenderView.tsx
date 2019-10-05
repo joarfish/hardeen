@@ -1,9 +1,9 @@
 /** @jsx jsx */
 
-import {Point, Shape, Position, HardeenHandle} from "../../../hardeen_wasm/pkg";
+import {Point, Shape, Position} from "../../../hardeen_wasm/pkg";
 import {AppState} from "../app-state/AppState";
 import * as React from "react";
-import {css, jsx, SerializedStyles} from "@emotion/core";
+import {css, jsx} from "@emotion/core";
 import {observer} from "mobx-react";
 
 interface RenderViewProps {

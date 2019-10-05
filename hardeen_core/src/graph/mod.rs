@@ -302,28 +302,37 @@ impl<T: Serialize> Graph<T> {
         if !self.is_handle_valid(&output_node_handle) {
             panic!("Node with this handle does not exist!");
         }
+        if let RunBehaviour::SubgraphProcessor(_,_) = self.get_node(&output_node_handle).unwrap().get_run_behaviour() {
+            self.invalidate_cache(&output_node_handle);
+        }
         self.output_node_handle = Some(output_node_handle);
     }
 
-    pub fn process_graph_output(&self) -> Result<Rc<T>, HardeenError> {
+    pub fn process_graph_output(&self, use_caches: bool) -> Result<Rc<T>, HardeenError> {
         if let Some(output_node_handle) = self.output_node_handle.clone() {
-            return self.process_node(&output_node_handle);
+            return self.process_node(&output_node_handle, use_caches);
         }
 
         Err(HardeenError::GraphOutputNotSet)
     }
 
-    fn process_node(&self, node_handle: &NodeHandle<T>) -> Result<Rc<T>, HardeenError> {
+    fn process_node(&self, node_handle: &NodeHandle<T>, use_caches: bool) -> Result<Rc<T>, HardeenError> {
         let mut inputs: Vec<Rc<T>> = Vec::new();
 
         let node = self.get_node(node_handle)?;
 
-        if let Some(cached_output) = node.get_cached_output() {
-            return Ok(cached_output);
+        if !node.is_input_satisfied() {
+            return Err(HardeenError::NodeInputNotSatisfied);
+        }
+
+        if use_caches {
+            if let Some(cached_output) = node.get_cached_output() {
+                return Ok(cached_output);
+            }
         }
 
         for input_node_handle in node.get_all_input_handles().iter() {
-            if let Ok(result) = self.process_node(input_node_handle) {
+            if let Ok(result) = self.process_node(input_node_handle, use_caches) {
                 inputs.push(result);
             } else {
                 return Err(HardeenError::ErrorProcessingNode);
@@ -346,7 +355,7 @@ impl<T: Serialize> Graph<T> {
     }
 
     pub fn invalidate_cache(&mut self, node_handle: &NodeHandle<T>) {
-        let mut node = self
+        let node = self
             .get_node_mut(node_handle)
             .expect("Node to process does not exist!");
         node.invalidate_cache();
@@ -360,7 +369,7 @@ impl<T: Serialize> Graph<T> {
         }
     }
 
-    fn get_output_node(&self) -> Result<&Node<T>, HardeenError> {
+    pub fn get_output_node(&self) -> Result<&Node<T>, HardeenError> {
         return match &self.output_node_handle {
             None => Err(HardeenError::GraphOutputNotSet),
             Some(handle) => match self.nodes.get(handle) {
@@ -368,6 +377,17 @@ impl<T: Serialize> Graph<T> {
                 Ok(node) => Ok(node),
             },
         };
+    }
+
+    pub fn get_output_node_handle(&self) -> Option<NodeHandle<T>> {
+        self.output_node_handle.clone()
+    }
+
+    pub fn is_output_node_set(&self) -> bool {
+        match self.output_node_handle {
+            Some(_) => true,
+            None => false
+        }
     }
 
     fn path_exists(&self, from: &NodeHandle<T>, to: &NodeHandle<T>) -> bool {

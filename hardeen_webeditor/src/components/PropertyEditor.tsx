@@ -88,19 +88,19 @@ class Attribute extends React.PureComponent<AttributeProps,AttributeState> {
     }
 
     renderF32() {
-        return <input type="text" pattern="-?[0-9]+\.?[0-9]*" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
     }
 
     renderU32() {
-        return <input type="text" pattern="[0-9]+" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
     }
 
     renderI32() {
-        return <input type="text" pattern="-?[0-9]+" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
     }
 
     renderString() {
-        return <input type="text" pattern="[a-zA-Z0-9]*" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
     }
 
     renderBoolean() {
@@ -108,7 +108,7 @@ class Attribute extends React.PureComponent<AttributeProps,AttributeState> {
     }
 
     renderPosition() {
-        return <input type="text" pattern="-?[0-9]+\.?[0-9]*,-?[0-9]+\.?[0-9]*" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
     }
 
     renderPositionList() {
@@ -251,7 +251,7 @@ class PropertyEditor extends React.Component<PropertyEditorProps, PropertyEditor
                 });
 
                 if(hc.is_input_satisfied(graphPath,nodeHandle)) {
-                    this.props.appState.renderOutput = hc.run_processors(graphPath);
+                    this.props.appState.messenger.send({type: "RunProcessors"});
                 }
             }}>Update</button>
         </div>

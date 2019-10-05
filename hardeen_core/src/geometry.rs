@@ -153,6 +153,7 @@ pub type ShapeDataVector = ImmutableVector<Shape>;
 pub type ShapeHandleIterator<'a> = HandleIterator<'a, ShapeHandle, ShapeDataVector>;
 pub type ShapeIterator<'a> = DataIterator<'a, ShapeDataVector>;
 
+#[derive(Debug)]
 pub enum GeometryWorldError {
     Error(&'static str),
 }

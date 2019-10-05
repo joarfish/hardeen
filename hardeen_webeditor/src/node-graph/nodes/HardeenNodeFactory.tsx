@@ -3,7 +3,7 @@ import { HardeenNodeModel } from './HardeenNodeModel';
 import { HardeenNodeWidget } from './HardeenNodeWidget';
 import { AbstractReactFactory } from '@projectstorm/react-canvas-core';
 import { DiagramEngine } from '@projectstorm/react-diagrams-core';
-import Messenger from '../app-state/Messenger';
+import Messenger from '../../app-state/Messenger';
 
 export class HardeenNodeFactory extends AbstractReactFactory<HardeenNodeModel, DiagramEngine> {
 
