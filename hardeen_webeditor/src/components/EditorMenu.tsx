@@ -29,7 +29,7 @@ const SubmenuStyle = css`
         padding: 0.5rem;
     }
     li:hover {
-        background-color: blue;
+        background-color: mediumpurple;
         color: white;
     }
 `;
@@ -57,9 +57,6 @@ const EditorMenu = (props: EditorMenuProps) => {
 
     return <div css={EditorMenuStyle}>
         <ul css={MenuEntryStyle}>
-            <li onClick={() => props.messenger.send({type:"SaveAll"})}>
-                File
-            </li>
             <li>Create Node
                 <ul>
                     {
@@ -69,13 +66,6 @@ const EditorMenu = (props: EditorMenuProps) => {
             </li>
             <li>
                 About
-            </li>
-            <li>
-                <span onClick={
-                    () => {
-                        props.messenger.send({type: "MoveLevelUp"});
-                    }
-                }>Level up</span>
             </li>
         </ul>
     </div>

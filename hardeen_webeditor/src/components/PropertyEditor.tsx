@@ -11,7 +11,8 @@ interface AttributeProps {
     label: string,
     valueType: string,
     value: string,
-    onChange: Function
+    onChange: Function,
+    appState: AppState
 }
 
 interface AttributeState {
@@ -88,34 +89,43 @@ class Attribute extends React.PureComponent<AttributeProps,AttributeState> {
     }
 
     renderF32() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handleFloatInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderU32() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handleFloatInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderI32() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handleFloatInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderString() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handleFloatInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderBoolean() {
-        return <input type="checkbox" checked={this.state.inputValue=="true" ? true : false} onChange={this.handleBooleanInput} />
+        return <input type="checkbox" name={this.props.label} checked={this.state.inputValue=="true" ? true : false} onChange={this.handleBooleanInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderPosition() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handleFloatInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handleFloatInput}
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     renderPositionList() {
-        return <input type="text" value={this.state.inputValue} onChange={this.handlePositionListInput} />
+        return <input type="text" name={this.props.label} value={this.state.inputValue} onChange={this.handlePositionListInput} 
+        onFocus={ (event) => { this.props.appState.inputFocused = true; }} onBlur={ () => { this.props.appState.inputFocused=false; } } />
     }
 
     handleFloatInput = (event: React.FormEvent<HTMLInputElement>) => {
+
+        event.stopPropagation();
 
         const value = event.currentTarget.value;
 
@@ -131,6 +141,8 @@ class Attribute extends React.PureComponent<AttributeProps,AttributeState> {
     }
 
     handlePositionListInput = (event: React.FormEvent<HTMLInputElement>) => {
+
+        event.stopPropagation();
 
         const value = event.currentTarget.value;
 
@@ -149,6 +161,7 @@ class Attribute extends React.PureComponent<AttributeProps,AttributeState> {
     }
 
     handleBooleanInput = (event: React.FormEvent<HTMLInputElement>) => {
+
         const value = event.currentTarget.checked ? "true" : "false";
         this.setState({
             inputValue: value
@@ -231,7 +244,7 @@ class PropertyEditor extends React.Component<PropertyEditorProps, PropertyEditor
             {
                 nodeType.parameters.map( (p) => {
                     const value = hc.get_node_parameter(graphPath,nodeHandle, p.param_name);
-                    return <Attribute key={p.param_name} label={p.param_name} value={value} valueType={p.param_type} onChange={ (newValue: string) => {
+                    return <Attribute appState={this.props.appState} key={p.param_name} label={p.param_name} value={value} valueType={p.param_type} onChange={ (newValue: string) => {
                         this.setState( (oldState) => {
                             oldState.dirty[p.param_name] = newValue;
                             return {

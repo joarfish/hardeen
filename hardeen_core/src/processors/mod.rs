@@ -303,8 +303,11 @@ impl Processor<GeometryWorld> for SmoothTangents {
 
                 let mut updated_point = p2.clone();
 
-                updated_point.out_tangent = p2.position + (p3.position - p1.position) * Position(self.strength, self.strength);
-                updated_point.in_tangent = p2.position + (p1.position - p3.position) * Position(self.strength, self.strength);
+                //updated_point.out_tangent = p2.position + (p3.position - p1.position) * Position(self.strength, self.strength);
+                //updated_point.in_tangent = p2.position + (p1.position - p3.position) * Position(self.strength, self.strength);
+
+                updated_point.out_tangent = (p3.position - p1.position) * Position(self.strength, self.strength);
+                updated_point.in_tangent = (p1.position - p3.position) * Position(self.strength, self.strength);
 
                 world.set_point(handles.1, updated_point).expect("Point could not be set!");
             };
@@ -912,15 +915,13 @@ impl SubgraphProcessor<GeometryWorld> for InstanceOnPoints {
         if subgraph.is_output_node_set() {
             for instance_point in instance_point_world.get_point_iterator() {
 
-                let subgraph_result = subgraph.process_graph_output(false).unwrap();
+                let mut subgraph_result = (*subgraph.process_graph_output(false).unwrap()).clone();
 
-                let mut instance = (*subgraph_result).clone();
-
-                instance.mutate_all_points( |p| {
+                subgraph_result.mutate_all_points( |p| {
                     p.position = p.position + instance_point.position;
                 });
 
-                world.merge(&instance);
+                world.merge(&subgraph_result);
             }
         }
 

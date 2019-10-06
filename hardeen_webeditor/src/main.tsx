@@ -7,11 +7,12 @@ import { HardeenNodeModel } from './node-graph/nodes/HardeenNodeModel';
 import { HardeenWebeditor } from './HardeenWebeditor';
 import {AppState} from "./app-state/AppState";
 import Messenger, {CreateNode, SaveAll, CreateLink, DeleteLink, SetOutputNode, NodeSelected, DeleteNode, SubgraphNodeSelected} from "./app-state/Messenger";
-import {action} from "mobx";
+import {action, autorun} from "mobx";
 import {SlottedInputPort} from "./node-graph/ports/SlottedInputPort";
 import PortFactory from './node-graph/ports/PortFactory';
 import { registerMessageHandler } from './hardeen/hardeen';
 import { trackGraphStates } from './hardeen/graph_state';
+import { Action, InputType } from '@projectstorm/react-canvas-core';
 
 
 
@@ -37,7 +38,20 @@ import(/* webpackChunkName: "hardeen" */ "../../hardeen_wasm/pkg" ).then( (harde
 	const state = engine.getStateMachine().getCurrentState();
 	if (state instanceof DefaultDiagramState) {
 		state.dragNewLink.config.allowLooseLinks = false;
+
+		// This is a bugfix to prevent React-Diagram from taking over inputs to property editor's input fields. 
+		const actions = engine.getActionEventBus().getActionsForType(InputType.KEY_DOWN);
+		autorun(() => {
+			if(appState.inputFocused) {
+				actions.forEach( action => engine.getActionEventBus().deregisterAction(action) );
+			}
+			else {
+				actions.forEach( action => engine.getActionEventBus().registerAction(action) );
+			}
+		});
 	}
+
+
 
 	const model = new DiagramModel();
 

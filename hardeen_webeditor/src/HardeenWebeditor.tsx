@@ -8,6 +8,7 @@ import EditorMenu from "./components/EditorMenu";
 import {AppState} from "./app-state/AppState";
 import RenderView from "./components/RenderView";
 import PropertyEditor from './components/PropertyEditor';
+import GraphLevelMenu from './components/GraphLevelMenu';
 
 export interface HardeenWebeditorProps {
 	engine: DiagramEngine;
@@ -25,8 +26,9 @@ const hardeenditorStyle = css`
 	width: 100%;
 	display: grid;
 	grid-template-areas: 	"graphMenu graphMenu graphMenu"
+							"graphLevelMenu verticalSeperator viewport"
 							"graphEditor verticalSeperator viewport";
-	grid-template-rows: 4rem calc(100vh - 4rem);
+	grid-template-rows: 3rem 3rem calc(100vh - 4rem);
 	grid-template-columns: calc(50vw - 0.125rem) 0.25rem calc(50vw - 0.125rem);
 `;
 
@@ -42,6 +44,7 @@ export class HardeenWebeditor extends React.Component<HardeenWebeditorProps> {
 		return <div css={hardeenditorStyle}>
 			<EditorMenu nodeTypes={this.props.appState.allNodeTypes} messenger={this.props.appState.messenger} />
 			<CanvasWidget css={canvasStyle} engine={this.props.engine} />
+			<GraphLevelMenu appState={this.props.appState}/>
 			<div css={verticalSeperator} />
 			<RenderView appState={this.props.appState} />
 			<PropertyEditor appState={this.props.appState} />

@@ -29,13 +29,6 @@ impl<H: Handle + Serialize + Clone, D: DataVector> Serialize for HandledVec<H, D
     where
         S: Serializer,
     {
-        /*let mut s = serializer.serialize_seq(Some(self.entity_count))?;
-        let mut iter = DataFieldIterator::new(&self.data);
-
-        while let Some(element) = iter.next() {
-            s.serialize_element(element)?;
-        }*/
-
         let mut s_map = serializer.serialize_map(Some(self.entity_count))?;
         let iter = DataFieldIterator::new(&self.data);
 

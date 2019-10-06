@@ -22,6 +22,7 @@ type ViewState = { type: "IDLE" } | { type: "MOVING", startX: number, startY: nu
 
 interface RenderViewState {
     viewbox: Viewbox,
+    showPoints: boolean
 }
 
 class RenderView extends React.PureComponent<RenderViewProps, RenderViewState> {
@@ -38,7 +39,8 @@ class RenderView extends React.PureComponent<RenderViewProps, RenderViewState> {
         super(props);
 
         this.state = {
-            viewbox: { x: 0, y: 0, width: undefined, height: undefined, baseWidth: 750 }
+            viewbox: { x: 0, y: 0, width: undefined, height: undefined, baseWidth: 750 },
+            showPoints: true
         }
 
         this.viewState = { type: "IDLE" };
@@ -65,8 +67,15 @@ class RenderView extends React.PureComponent<RenderViewProps, RenderViewState> {
     renderSvg() {
         const viewbox = this.state.viewbox;
         const world = this.props.appState.renderOutput;
+        console.log(world);
 
-        return <svg ref={this.svgRootRef}
+        return <div>
+            <div>
+                <button onClick={() => this.setState((prevState:RenderViewState) => ({
+                    showPoints: !prevState.showPoints
+                })) } >Show Points</button>
+            </div>
+            <svg ref={this.svgRootRef}
                 viewBox={`${viewbox.x} ${viewbox.y} ${viewbox.baseWidth} ${viewbox.baseWidth * viewbox.height / viewbox.width} `}
                 width={viewbox.width}
                 height={viewbox.height}
@@ -79,11 +88,11 @@ class RenderView extends React.PureComponent<RenderViewProps, RenderViewState> {
                     <path key={entry[0]} d={this.getPathStringForShape(entry[1], world.points)} stroke="black" fill="transparent" /> )
             }
             {
-                world && Object.entries(world.points).map( (entry) =>
+                this.state.showPoints && world && Object.entries(world.points).map( (entry) =>
                     <circle key={entry[0]} cx={entry[1].position[0]} cy={entry[1].position[1]} r="1" fill="red" />
                 )
             }
-        </svg>
+        </svg></div>
     }
 
     getPathStringForShape = (shape: Shape, points: {[handle: number]: Point}) => {
@@ -94,40 +103,40 @@ class RenderView extends React.PureComponent<RenderViewProps, RenderViewState> {
         const first_point = points[first_point_index];
 
         let pathString : string = `M ${first_point.position[0]} ${first_point.position[1]} `;
-        let lastOutTangent : Position = first_point.out_tangent;
+        let lastPoint : Point = first_point;
 
         for(let vertex_nr = 1; vertex_nr < Object.keys(shape.vertices).length; vertex_nr++) {
             const p_index = shape.vertices[vertex_nr].index;
             const p = points[p_index];
 
-            pathString += this.getPointSegment(p, lastOutTangent);
+            pathString += this.getPointSegment(p, lastPoint);
 
-            lastOutTangent = p.out_tangent;
+            lastPoint = p;
         }
 
         if(shape.closed) {
-            pathString += this.getPointSegment(first_point, lastOutTangent);
+            pathString += this.getPointSegment(first_point, lastPoint);
         }
 
         return pathString;
     }
 
-    getPointSegment(point: Point, lastOutTangent: Position) {
+    getPointSegment(point: Point, lastPoint: Point) {
         let segmentString = "";
-        if(this.isPositionNull(lastOutTangent)) {
+        if(this.isPositionNull(lastPoint.out_tangent)) {
             if(this.isPositionNull(point.in_tangent)) {
                 segmentString += "L ";
             }
             else {
-                segmentString += "Q "+point.in_tangent[0]+" "+point.in_tangent[1]+" ";
+                segmentString += "Q "+(point.position[0]+point.in_tangent[0])+" "+(point.position[1]+point.in_tangent[1])+" ";
             }
         }
         else {
             if(this.isPositionNull(point.in_tangent)) {
-                segmentString += "Q "+lastOutTangent[0]+" "+lastOutTangent[1]+" ";
+                segmentString += "Q "+(lastPoint.position[0]+lastPoint.out_tangent[0])+" "+(lastPoint.position[1]+lastPoint.out_tangent[1])+" ";
             }
             else {
-                segmentString += "C "+lastOutTangent[0]+" "+lastOutTangent[1]+" "+point.in_tangent[0]+" "+point.in_tangent[1]+" ";
+                segmentString += "C "+(lastPoint.position[0]+lastPoint.out_tangent[0])+" "+(lastPoint.position[1]+lastPoint.out_tangent[1])+" "+(point.position[0]+point.in_tangent[0])+" "+(point.position[1]+point.in_tangent[1])+" ";
             }
         }
 

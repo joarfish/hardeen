@@ -59,17 +59,18 @@ export interface RunProcessors {
 
 export interface SwitchToSubgraph {
     type: "SwitchToSubgraph",
-    node: "root" | HardeenNodeModel
+    node: HardeenNodeModel
 }
 
 export interface SwitchedToSubgraph {
     type: "SwitchedToSubgraph",
-    parent_path: HardeenGraphPath
+    parentPath: HardeenGraphPath,
+    displayName: string
 }
 
 export interface SwitchToGraphPath {
     type: "SwitchToGraphPath",
-    path: "root" | HardeenGraphPath
+    path: HardeenGraphPath
 }
 
 

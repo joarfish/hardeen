@@ -38,11 +38,11 @@ const NodeStyleBase = css`
 
 
 const PortStyle = css`
-    width: 12px;
-    height: 12px;
-    margin: 2px;
-    border-radius: 4px;
-    background: darkgray;
+    width: 0.9rem;
+    height: 0.9rem;
+	margin: 2px;
+	border-radius: 100%;
+    background: gray;
 	cursor: pointer;
 	:hover {
 		background: mediumpurple;
@@ -81,18 +81,18 @@ export class HardeenNodeWidget extends React.Component<HardeenNodeWidgetProps, H
 			${this.props.node.isSelected() && NodeStyleSelected}
 		`;
 
-		const fillColor = this.props.node.isOutputNode ? "green" : "white";
+		const fillColor = this.props.node.isOutputNode ? "mediumpurple" : "white";
 
 		return (
 			<div css={nodeStyle} onClick={this.handleClick} onDoubleClick={this.handleDoubleClick}>
 				<div css={css`display: flex; flex-direction: row; width: 100%; padding: 0.25rem;`}>
 					<div css={EyeIcon} onClick={this.makeOutputNode} >
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 576 512">
 							<path fill={fillColor} d="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z" />
 						</svg>
 					</div>
 					<div css={css`display: flex; flex-direction: column; margin:auto;`}>
-						<div css={PortsContainerStyle}>
+						<div css={[PortsContainerStyle, css`transform: translateY(-0.9rem);` ]}>
 						{
 							Object.values(this.props.node.getPorts()).filter( (port) => port.getOptions().alignment==PortModelAlignment.TOP ).map( (port) => (
 									<PortWidget key={port.getID()} engine={this.props.engine} port={port}>
@@ -102,7 +102,7 @@ export class HardeenNodeWidget extends React.Component<HardeenNodeWidgetProps, H
 						}
 						</div>
 						<div css={TextStyle}><p>{this.props.node.typeName}</p></div>
-						<div css={PortsContainerStyle}>
+						<div css={[PortsContainerStyle, css`transform: translateY(0.9rem);` ]}>
 							<PortWidget engine={this.props.engine} port={this.props.node.getPort('out')}>
 								<div css={PortStyle} />
 							</PortWidget>
