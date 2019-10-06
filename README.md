@@ -1,12 +1,14 @@
 # 🎩 Hardeen
 
-Hardeen at its core is a library for procedurally generating and animating vector graphics. Currently there is a web-frontend that provides basic editing capabilities.
+Hardeen is a library intended to allow for node-based procedural modelling and animation of 2d vector graphics. It's written in 🦀 Rust. There is a web-frontend that provides basic editing capabilities. This is powered by a WebAssembly wrapper around the Hardeen Core library.
 
-## 🎯 Roadmap for a MVP
+## The Idea
 
-- Animation: Keyframing and Interpolation
-- Subgraph-Processors: Nesting of and looping over Subgraphs
-- Saving and loading
+Procdural modelling techniques, non-destructive/node-based editing are getting more and more attention in recent years. This has been limited to 3d software packets. The idea behind Hardeen is to explore whether similar approaches can lead to interesting results for the creation and animation of 2d vector graphics.
+
+## Give it a try
+
+You can use the web-frontend at https://jonasklein.dev/hardeen or build it yourself: Clone the whole repository and run `npm run dev` in the hardeen_webeditor folder to spin up a local server.
 
 ## Contributing
 
@@ -16,10 +18,7 @@ The project is at a very early stage. If you'd like to contribute or if you have
 
 - [im-rs](https://docs.rs/crate/im/13.0.0)
 - [Storm React-Diagrams](https://github.com/projectstorm/react-diagrams)
-
-## Author
-
-- *Jonas* 
+- [wasm-bingen](https://github.com/rustwasm/wasm-bindgen)
 
 ## License
 
