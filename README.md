@@ -2,6 +2,10 @@
 
 Hardeen is a library intended to allow for node-based procedural modelling and animation of 2d vector graphics. It's written in 🦀 Rust. There is a web-frontend that provides basic editing capabilities. This is powered by a WebAssembly wrapper around the Hardeen Core library.
 
+![Nested Graph](https://https://jonasklein.dev/hardeen/example_1.png)
+![Instancing on Points](https://https://jonasklein.dev/hardeen/example_2.png)
+![More Instancing](https://https://jonasklein.dev/hardeen/example_3.png)
+
 ## The Idea
 
 Procdural modelling techniques, non-destructive/node-based editing are getting more and more attention in recent years. This has been limited to 3d software packets. The idea behind Hardeen is to explore whether similar approaches can lead to interesting results for the creation and animation of 2d vector graphics.
