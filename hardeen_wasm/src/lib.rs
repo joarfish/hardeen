@@ -196,6 +196,7 @@ impl HardeenCoreInterface {
                 hardeen_core::CopyPointsAndRandomOffset::get_processor_type_info(),
                 hardeen_core::CreateShapeFromAllGroups::get_processor_type_info(),
                 hardeen_core::SmoothTangents::get_processor_type_info(),
+                hardeen_core::ExtrudeShape::get_processor_type_info(),
                 hardeen_core::InstanceOnPoints::get_processor_type_info(),
             ],
             lastResult: None,

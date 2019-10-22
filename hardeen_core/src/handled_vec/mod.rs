@@ -1,3 +1,17 @@
+//! # Handled Vec
+//!
+//! Hardeen heavily relies on the use of Handles instead of pointers. This module provides the underlying
+//! data structures for this pattern. The basic characteristics of a `HandledVec` are that it allows for
+//! economic reuse of memory locations that have been occupied and then freed.
+//!
+//! A `HandledVec` is build upon a vector, but is decoupled from the latters implementation. It just
+//! requires it to be wrapped in a struct that implements the `DataVector`-trait.
+//!
+//! Hardeen has DataVector-Wrappers for std::vec::Vec as well as im::Vector (Vectors based on RRB trees). The latter
+//! is ideal for having a vector that is often copied and mutated as with the result of Hardeens processors.
+//!
+
+
 mod data_vector;
 mod handles;
 
@@ -92,7 +106,7 @@ impl<H: Handle + Serialize + Clone, D: DataVector> HandledVec<H, D> {
     pub fn get(&self, handle: &H) -> Result<&D::EntryDataType, HandledVecError> {
         if let Some(data) = self.data.get(handle.get_index()) {
             if data.get_generation() == handle.get_generation() {
-                if data.get_occupied() == true {
+                if data.get_occupied() {
                     return Ok(data.get_data().as_ref().unwrap());
                 }
 
@@ -114,7 +128,7 @@ impl<H: Handle + Serialize + Clone, D: DataVector> HandledVec<H, D> {
             }
         }
 
-        return Err(HandledVecError::CannotBorrowAsMutable);
+        Err(HandledVecError::CannotBorrowAsMutable)
     }
 
     pub fn update(&mut self, handle: &H, entry: D::EntryDataType) -> Result<(), HandledVecError> {
@@ -201,4 +215,9 @@ impl<H: Handle+Clone, T: Clone+Serialize> Clone for HandledVec<H, ImmutableVecto
 
         handled_vec
     }
+}
+
+#[cfg(test)]
+mod tests {
+
 }

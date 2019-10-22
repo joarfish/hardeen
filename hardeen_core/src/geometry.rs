@@ -1,16 +1,45 @@
+//! # Geometry
+//!
+//! Central to this module is the struct `GeometryWorld`. At the moment it is a rather crude data structure
+//! which holds points, shapes and groups of points. `Point`s are the basic building blocks of shapes, they have a
+//! position and an in- as well as an outgoing tangent. The tangents become relevant in the context of shapes. A
+//! shape is basically defined by a sequence of points, where the out_tangent of point n and the in_tangent of point
+//! n+1 together with the points' positions describe a beziere curve.
+//! Points can be organised into named groups in order restrict processing to a subset of points.
+//! Both, shapes and groups, relate the underlying point via handles.
+
 use crate::handled_vec::*;
 use serde::Serialize;
 use std::vec::*;
 
 use std::fmt;
 use std::num::ParseFloatError;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, AddAssign, Div};
 use std::str::FromStr;
 
 use std::collections::HashMap;
 
-#[derive(Clone, Serialize, Debug, Copy)]
+#[derive(Clone, Serialize, Debug, Copy, PartialEq)]
 pub struct Position(pub f32, pub f32);
+
+impl Position {
+    pub fn length(self) -> f32 {
+        (self.0 * self.0 + self.1 * self.1).sqrt().abs()
+    }
+
+    pub fn is_zero(self) -> bool {
+        self == Position(0.0,0.0)
+    }
+
+    pub fn normalize(self) -> Position {
+        if self.is_zero() {
+            Position(0.0,0.0)
+        }
+        else {
+            self / self.length()
+        }
+    }
+}
 
 impl FromStr for Position {
     type Err = ParseFloatError;
@@ -38,6 +67,14 @@ impl Add for Position {
     }
 }
 
+impl AddAssign for Position {
+
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+        self.1 += rhs.1;
+    }
+}
+
 impl Sub for Position {
     type Output = Position;
 
@@ -46,11 +83,35 @@ impl Sub for Position {
     }
 }
 
-impl Mul for Position {
+impl Mul<Position> for Position {
     type Output = Position;
 
     fn mul(self, other: Position) -> Position {
         Position(self.0 * other.0, self.1 * other.1)
+    }
+}
+
+impl Mul<f32> for Position {
+    type Output = Position;
+
+    fn mul(self, other: f32) -> Position {
+        Position(self.0 * other, self.1 * other)
+    }
+}
+
+impl Div<Position> for Position {
+    type Output = Position;
+
+    fn div(self, other: Position) -> Position {
+        Position(self.0 / other.0, self.1 / other.1)
+    }
+}
+
+impl Div<f32> for Position {
+    type Output = Position;
+
+    fn div(self, other: f32) -> Position {
+        Position(self.0 / other, self.1 / other)
     }
 }
 
@@ -206,10 +267,10 @@ impl GeometryWorld {
             }
         }
 
-        return match self.points.remove_entry(point_handle) {
+        match self.points.remove_entry(point_handle) {
             Ok(()) => Ok(()),
             Err(_error) => Err(GeometryWorldError::Error("Couldn't remove point!")),
-        };
+        }
     }
 
     pub fn get_point(&self, handle: &PointHandle) -> Result<&Point, HandledVecError> {
@@ -221,10 +282,10 @@ impl GeometryWorld {
         handle: &PointHandle,
         point: Point,
     ) -> Result<(), GeometryWorldError> {
-        return match self.points.update(handle, point) {
+        match self.points.update(handle, point) {
             Ok(()) => Ok(()),
             Err(_error) => Err(GeometryWorldError::Error("Couldn't update point!")),
-        };
+        }
     }
 
     pub fn create_group(&mut self, name: &str) -> GroupHandle {
@@ -284,6 +345,10 @@ impl GeometryWorld {
 
     pub fn get_group_mut(&mut self, handle: &GroupHandle) -> Result<&mut Group, HandledVecError> {
         self.groups.get_mut(handle)
+    }
+
+    pub fn remove_shape(&mut self, handle: ShapeHandle) -> Result<(), HandledVecError> {
+        self.shapes.remove_entry(handle)
     }
 
     pub fn add_points_to_shape(

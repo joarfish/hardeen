@@ -10,15 +10,15 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec::Vec;
 
-mod input_behaviours;
+mod input_component;
 mod nodes;
 mod parameters;
-mod run_behaviours;
+mod processor_component;
 
 pub use nodes::*;
 pub use parameters::*;
-pub use run_behaviours::*;
-pub use input_behaviours::*;
+pub use processor_component::*;
+pub use input_component::*;
 
 use crate::hardeen_error::HardeenError;
 use crate::handled_vec::{HandledVec, HandledVecError, MarkedHandle, StdVec};
@@ -27,7 +27,7 @@ pub type NodeHandle<T> = MarkedHandle<Node<T>>;
 pub type SubgraphHandle<T> = MarkedHandle<Graph<T>>;
 pub type ParameterHandle = MarkedHandle<Parameter>;
 
-pub type GraphInputBehaviour<T> = InputBehaviour<NodeHandle<T>>;
+pub type GraphInputBehaviour<T> = InputComponent<NodeHandle<T>>;
 
 #[derive(Serialize)]
 pub struct ExposedParameter<T: Serialize> {
@@ -108,8 +108,8 @@ impl<T: Serialize> Graph<T> {
         &self.processor_types
     }
 
-    pub fn add_processor_node(&mut self, processor: Box<dyn Processor<T>>) -> NodeHandle<T> {
-        self.nodes.add_entry(Node::new_processor_node(processor))
+    pub fn add_processor_node(&mut self, processor: Box<dyn BasicProcessor<T>>) -> NodeHandle<T> {
+        self.nodes.add_entry(Node::new_basic_processor_node(processor))
     }
 
     pub fn add_subgraph_processor_node(
@@ -120,18 +120,16 @@ impl<T: Serialize> Graph<T> {
         let subgraph = Graph::new();
         let subgraph_handle = self.subgraphs.add_entry(subgraph);
 
-        let handle = self.nodes
-            .add_entry(Node::new_subgraph_processor_node(processor, subgraph_handle));
-
-        handle
+        self.nodes
+            .add_entry(Node::new_subgraph_processor_node(processor, subgraph_handle))
     }
 
     pub fn get_subgraph_handle(&self, node_handle: &NodeHandle<T>) -> Result<SubgraphHandle<T>, HardeenError> {
         let node = self.get_node(node_handle)?;
 
-        match node.get_run_behaviour() {
-            RunBehaviour::Processor(_) => Err(HardeenError::NodeRunTypeMismatch),
-            RunBehaviour::SubgraphProcessor(_, subgraph_handle) => Ok(subgraph_handle.clone())
+        match node.get_processor_component() {
+            ProcessorComponent::BasicProcessor(_) => Err(HardeenError::NodeRunTypeMismatch),
+            ProcessorComponent::SubgraphProcessor(_, subgraph_handle) => Ok(subgraph_handle.clone())
         }
     }
 
@@ -150,9 +148,9 @@ impl<T: Serialize> Graph<T> {
 
     pub fn is_node_subgraph_processor(&self, node_handle: &NodeHandle<T>) -> Result<bool, HardeenError> {
         let node = self.get_node(node_handle)?;
-        match node.get_run_behaviour() {
-            RunBehaviour::Processor(_) => Ok(false),
-            RunBehaviour::SubgraphProcessor(_,_) => Ok(true)
+        match node.get_processor_component() {
+            ProcessorComponent::BasicProcessor(_) => Ok(false),
+            ProcessorComponent::SubgraphProcessor(_,_) => Ok(true)
         }
     }
 
@@ -161,7 +159,7 @@ impl<T: Serialize> Graph<T> {
         name: &str,
         value: &str
     ) -> Result<(), HardeenError> {
-        return match self.exposed_parameters.get(name) {
+        match self.exposed_parameters.get(name) {
             Some(exposed_parameter) => {
                 let node_handle = exposed_parameter.get_node_handle();
                 (*self.nodes.get_mut(node_handle)?)
@@ -170,7 +168,7 @@ impl<T: Serialize> Graph<T> {
                 Ok(())
             }
             None => Err(HardeenError::ExposedParameterDoesNotExist),
-        };
+        }
     }
 
     pub fn expose_parameter(
@@ -220,7 +218,7 @@ impl<T: Serialize> Graph<T> {
             panic!("Circles are not allowed!");
         }
 
-        return match self
+        match self
             .nodes
             .get_mut(to)
             .unwrap()
@@ -229,7 +227,7 @@ impl<T: Serialize> Graph<T> {
         {
             Ok(()) => Ok(()),
             Err(_error) => Err(HardeenError::InvalidHandle),
-        };
+        }
     }
 
     pub fn connect(
@@ -302,7 +300,7 @@ impl<T: Serialize> Graph<T> {
         if !self.is_handle_valid(&output_node_handle) {
             panic!("Node with this handle does not exist!");
         }
-        if let RunBehaviour::SubgraphProcessor(_,_) = self.get_node(&output_node_handle).unwrap().get_run_behaviour() {
+        if let ProcessorComponent::SubgraphProcessor(_,_) = self.get_node(&output_node_handle).unwrap().get_processor_component() {
             self.invalidate_cache(&output_node_handle);
         }
         self.output_node_handle = Some(output_node_handle);
@@ -339,11 +337,11 @@ impl<T: Serialize> Graph<T> {
             }
         }
 
-        let result = match node.get_run_behaviour() {
-            RunBehaviour::Processor(processor) => {
+        let result = match node.get_processor_component() {
+            ProcessorComponent::BasicProcessor(processor) => {
                 (*processor).run(inputs)
             },
-            RunBehaviour::SubgraphProcessor(processor, subgraph_handle) => {
+            ProcessorComponent::SubgraphProcessor(processor, subgraph_handle) => {
                 let subgraph = self.subgraphs.get(&subgraph_handle)?;
                 (*processor).run(inputs, subgraph)
             }
@@ -370,13 +368,13 @@ impl<T: Serialize> Graph<T> {
     }
 
     pub fn get_output_node(&self) -> Result<&Node<T>, HardeenError> {
-        return match &self.output_node_handle {
+        match &self.output_node_handle {
             None => Err(HardeenError::GraphOutputNotSet),
             Some(handle) => match self.nodes.get(handle) {
                 Err(_error) => Err(HardeenError::InvalidHandle),
                 Ok(node) => Ok(node),
             },
-        };
+        }
     }
 
     pub fn get_output_node_handle(&self) -> Option<NodeHandle<T>> {
@@ -384,10 +382,7 @@ impl<T: Serialize> Graph<T> {
     }
 
     pub fn is_output_node_set(&self) -> bool {
-        match self.output_node_handle {
-            Some(_) => true,
-            None => false
-        }
+        self.output_node_handle.is_some()
     }
 
     fn path_exists(&self, from: &NodeHandle<T>, to: &NodeHandle<T>) -> bool {

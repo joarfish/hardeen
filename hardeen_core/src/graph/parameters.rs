@@ -1,3 +1,9 @@
+//! # Parameters
+//!
+//! Each ProcessorComponent has a different set of parameters. The kind of parameters is restricted
+//! to a number of `ParameterTypes`. All parameters be set from a &str and converted to a String. This
+//! allows for a common interface to setting and getting parameters.
+
 use serde::Serialize;
 use std::string::ToString;
 use std::str::FromStr;
