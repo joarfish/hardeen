@@ -1,6 +1,22 @@
+<<<<<<< HEAD
 //! # Hardeen Core
 //!
 //!
+=======
+//! # Hardeen
+//!
+//! Hardeen is a library which allows for node-based procedural modelling and animation (not yet implemented)
+//! of 2d vector graphics.
+//! 
+//! There are three main components:
+//! - GeometryWorld: A datastructure representing points, shapes and groupings of points
+//! - Graph: An acyclic, directed graph; each Node with an associated processor
+//! - Processors: Processors one or more GeometryWorlds and produce a new one
+//! 
+//! `handled_vec` provides a datastructure that is used throughout the library. Insted of using smart
+//! pointers, Hardeen havily relies on `handles`.
+
+>>>>>>> 433015352ba743080d1c313b74aabfab9e146964
 
 mod geometry;
 mod graph;

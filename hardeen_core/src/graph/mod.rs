@@ -1,9 +1,9 @@
-//! # Processor Graph
+//! # Hardeen Graph
 //!
-//! `processor_graph` implements a directed, acyclic graph. The purpose of a processor graph
-//! is to take some input and push it through a number of processors and produce one output.
-//! Each node has a fixed number of ingoing edges and an arbitrary number of outgoing edges.
-//!
+//! `graph` implements a directed, acyclic, `processor` graph. The purpose of a processor graph
+//! is to take some input, push it through a number of processors and produce one output.
+//! 
+//! 
 
 use serde::Serialize;
 use std::collections::HashMap;
