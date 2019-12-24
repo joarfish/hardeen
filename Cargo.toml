@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "hardeen_core",
+    "hardeen_wasm"
+]
