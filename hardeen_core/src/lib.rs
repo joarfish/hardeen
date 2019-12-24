@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-//! # Hardeen Core
-//!
-//!
-=======
 //! # Hardeen
 //!
 //! Hardeen is a library which allows for node-based procedural modelling and animation (not yet implemented)
@@ -16,7 +11,6 @@
 //! `handled_vec` provides a datastructure that is used throughout the library. Insted of using smart
 //! pointers, Hardeen havily relies on `handles`.
 
->>>>>>> 433015352ba743080d1c313b74aabfab9e146964
 
 mod geometry;
 mod graph;
