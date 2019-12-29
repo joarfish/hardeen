@@ -1064,7 +1064,7 @@ impl BasicProcessor<GeometryWorld> for GroupPoints {
             let point = world.get_point(point_handle).unwrap();
 
             let locals = cpython::PyDict::new(py);
-            locals.set_item(py, 'N'.to_string(), idx + 1);
+            locals.set_item(py, 'N'.to_string(), idx + 1).unwrap();
             locals.set_item(py, 'X'.to_string(), point.position.1).unwrap();
             locals.set_item(py, 'Y'.to_string(), point.position.0).unwrap();
 

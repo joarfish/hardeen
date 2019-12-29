@@ -63,3 +63,21 @@ impl<T> Hash for MarkedHandle<T> {
         self.generation.hash(state)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockGeometry;
+
+    #[test]
+    fn test_marked_handle_partial_eq() {
+        let handle1 : MarkedHandle<MockGeometry> = MarkedHandle::new(0, 1);
+        let handle2 : MarkedHandle<MockGeometry> = MarkedHandle::new(0, 1);
+        let handle3 : MarkedHandle<MockGeometry> = MarkedHandle::new(0, 2);
+
+        assert_eq!(handle1.eq(&handle2), true);
+        assert_eq!(handle1.eq(&handle3), false);
+    }
+
+}

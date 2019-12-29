@@ -23,7 +23,7 @@ use std::vec::Vec;
 use serde::Serialize;
 use serde::ser::{SerializeMap, Serializer};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum HandledVecError {
     GenerationMismatch,
     IndexDoesNotExist,
@@ -104,6 +104,7 @@ impl<H: Handle + Serialize + Clone, D: DataVector> HandledVec<H, D> {
     }
 
     pub fn get(&self, handle: &H) -> Result<&D::EntryDataType, HandledVecError> {
+
         if let Some(data) = self.data.get(handle.get_index()) {
             if data.get_generation() == handle.get_generation() {
                 if data.get_occupied() {
@@ -170,10 +171,10 @@ impl<H: Handle + Serialize + Clone, D: DataVector> HandledVec<H, D> {
         DataIterator::new(&self.data)
     }
 
-    pub fn is_handle_valid(&self, handle: &H) -> Result<bool, HandledVecError> {
+    pub fn is_handle_valid(&self, handle: &H) -> Result<(), HandledVecError> {
         if let Some(data_field) = self.data.get(handle.get_index()) {
             if data_field.get_generation() == handle.get_generation() {
-                return Ok(true);
+                return Ok(());
             }
 
             return Err(HandledVecError::GenerationMismatch);
@@ -219,5 +220,86 @@ impl<H: Handle+Clone, T: Clone+Serialize> Clone for HandledVec<H, ImmutableVecto
 
 #[cfg(test)]
 mod tests {
+
+    use super::*;
+    use data_vector::StdVec;
+    use handles::MarkedHandle;
+
+    #[derive(Serialize, PartialEq, Debug)]
+    struct MockDataField {
+        data: u32
+    }
+
+    #[test]
+    fn add_entry() {
+        let mut handled_vec1 : HandledVec<MarkedHandle<MockDataField>, StdVec<MockDataField>> = HandledVec::new();
+
+        handled_vec1.add_entry(MockDataField { data: 1 });
+        handled_vec1.add_entry(MockDataField { data: 2 });
+        handled_vec1.add_entry(MockDataField { data: 3 });
+
+        assert_eq!(handled_vec1.entity_count, 3);
+        assert_eq!(handled_vec1.data.get(1), 
+            Some(&DataField::new(Some(MockDataField { data: 2 }), 1, true )));
+    }
+
+    #[test]
+    fn remove_entry() {
+        let mut handled_vec : HandledVec<MarkedHandle<MockDataField>, StdVec<MockDataField>> = HandledVec::new();
+
+        handled_vec.add_entry(MockDataField { data: 1 });
+        let h = handled_vec.add_entry(MockDataField { data: 2 });
+        handled_vec.add_entry(MockDataField { data: 3 });
+
+        assert_eq!(handled_vec.entity_count, 3);
+        assert_eq!(handled_vec.data.get(1), 
+            Some(&DataField::new(Some(MockDataField { data: 2 }), 1, true )));
+
+        assert_eq!(handled_vec.remove_entry(h), Ok(()));
+
+        assert_eq!(handled_vec.entity_count, 2);
+        assert_eq!(handled_vec.data.get(1), 
+            Some(&DataField::new(None, 1, false )));
+
+        assert_eq!(handled_vec.data.get(0), 
+            Some(&DataField::new(Some(MockDataField { data: 1 }), 1, true  )));
+
+        assert_eq!(handled_vec.data.get(2), 
+            Some(&DataField::new(Some(MockDataField { data: 3 }), 1, true  )));
+        
+        assert_eq!(handled_vec.free_handles, vec![ MarkedHandle::new(1,1) ]);
+
+        handled_vec.add_entry(MockDataField { data: 4});
+
+        assert_eq!(handled_vec.entity_count, 3);
+        assert_eq!(handled_vec.free_handles, vec![ ]);
+        assert_eq!(handled_vec.data.get(1), 
+            Some(&DataField::new(Some(MockDataField { data: 4 }), 2, true  )));
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_entry_error() {
+        let mut handled_vec : HandledVec<MarkedHandle<MockDataField>, StdVec<MockDataField>> = HandledVec::new();
+
+        handled_vec.remove_entry(MarkedHandle::new(1,1)).unwrap();
+    }
+
+    #[test]
+    fn get_entry() {
+        let mut handled_vec : HandledVec<MarkedHandle<MockDataField>, StdVec<MockDataField>> = HandledVec::new();
+
+        handled_vec.add_entry(MockDataField { data: 1 });
+        let h2 = handled_vec.add_entry(MockDataField { data: 2 });
+        handled_vec.add_entry(MockDataField { data: 3 });
+
+        let invalid_handle = MarkedHandle::new(2, 2);
+
+        let entry = handled_vec.get(&h2).unwrap();
+
+        assert_eq!(entry, &MockDataField { data: 2} );
+
+        assert_eq!(handled_vec.get(&invalid_handle), Err(HandledVecError::GenerationMismatch));
+    }
 
 }
