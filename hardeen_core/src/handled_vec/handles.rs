@@ -51,7 +51,7 @@ impl<T> Handle for MarkedHandle<T> {
 
 impl<T> PartialEq for MarkedHandle<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.index == other.index && self.generation == self.generation
+        self.index == other.index && self.generation == other.generation
     }
 }
 

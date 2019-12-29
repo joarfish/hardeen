@@ -19,7 +19,7 @@ use itertools::Itertools;
 impl Graph<GeometryWorld> {
 
     pub fn add_processor_node_by_type(&mut self, processor_type: &str) -> NodeHandle<GeometryWorld> {
-        let handle = match processor_type {
+        match processor_type {
             "Empty" => {
                 let node = Empty::new();
                 self.add_processor_node(Box::from(node))
@@ -93,9 +93,7 @@ impl Graph<GeometryWorld> {
                 self.add_processor_node(Box::from(node))
             },
             &_ => panic!("Invalid Type-Name provided!")
-        };
-
-        handle
+        }        
     }
 
 }
@@ -132,6 +130,16 @@ macro_rules! create_processor {
                     )*
                     ]
                 )
+            }
+        }
+
+        impl Default for $type {
+            fn default() -> Self {
+                $type {
+                    $(
+                        $param: $param_default,
+                    )*
+                }
             }
         }
 
@@ -212,7 +220,6 @@ impl CreateRectangle {
             height: 5.0
         }
     }
-
 }
 
 impl BasicProcessor<GeometryWorld> for CreateRectangle {
@@ -763,7 +770,7 @@ impl BasicProcessor<GeometryWorld> for CopyPointsAndRandomOffset {
 create_processor!(CopyPointsAndRandomOffset, (SlottedInput,1), 1, [
     min_offset => (Position, Position(0.0,0.0)),
     max_offset => (Position, Position(0.0,0.0)),
-    group_name => (String, "all"),
+    group_name => (String, "all".to_string()),
     group => (bool, true),
     iterations => (u32, 1)
 ]);
@@ -895,7 +902,7 @@ impl BasicProcessor<GeometryWorld> for CreateShapeFromGroup {
 }
 
 create_processor!(CreateShapeFromGroup, (SlottedInput,1), 1, [
-    group_name => (String, "all"),
+    group_name => (String, "all".to_string()),
     closed => (bool, false)
 ]);
 
@@ -919,7 +926,7 @@ impl BasicProcessor<GeometryWorld> for CreateShapeFromAllGroups {
 
         let mut iter = (*input[0]).get_group_handle_iterator();
 
-        while let Some(group_handle) =  iter.next() {
+        while let Some(group_handle) = iter.next() {
             let shape_handle = world.create_shape(self.closed);
             let group = (*input[0]).get_group(&group_handle).unwrap();
 
@@ -969,7 +976,7 @@ impl BasicProcessor<GeometryWorld> for Translate {
 
 create_processor!(Translate, (SlottedInput,1), 1, [
     offset => (Position, Position(0.0,0.0)),
-    group_name => (String, "all")
+    group_name => (String, "all".to_string())
 ]);
 
 pub struct RandomTranslate {

@@ -17,7 +17,9 @@ mod graph;
 mod handled_vec;
 mod hardeen_error;
 mod geometry_processors;
+mod project;
 
+pub use crate::project::*;
 pub use crate::graph::*;
 pub use crate::geometry_processors::*;
 pub use crate::geometry::*;
