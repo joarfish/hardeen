@@ -1,0 +1,11 @@
+[package]
+name = "hardeen_cpplib"
+version = "0.1.0"
+authors = ["Jonas Klein"]
+edition = "2018"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+hardeen_core={ path = "../hardeen_core" }

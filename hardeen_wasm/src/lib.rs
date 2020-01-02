@@ -284,7 +284,7 @@ impl HardeenCoreInterface {
     #[allow(non_snake_case)]
     pub fn add_processor_node(&mut self, path: &HardeenGraphPath, typeName: &str) -> HardeenHandle {
         let graph = self.get_subgraph_from_path_mut(path);
-        let handle = graph.add_processor_node_by_type(typeName);
+        let handle = graph.add_processor_node_by_type_name(typeName);
 
         HardeenHandle::new(handle.get_index(), handle.get_generation(), typeName)
     }

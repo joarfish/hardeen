@@ -27,3 +27,4 @@ pub use crate::handled_vec::*;
 pub use crate::hardeen_error::HardeenError;
 
 pub use crate::graph::ProcessorTypeInfo;
+pub use crate::geometry_processors::ProcessorType;

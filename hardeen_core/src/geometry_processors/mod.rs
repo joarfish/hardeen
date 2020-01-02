@@ -16,9 +16,107 @@ use std::cmp::Ordering;
 use std::iter;
 use itertools::Itertools;
 
+pub enum ProcessorType {
+    Empty,
+    CreateRectangle,
+    ScatterPoints,
+    Scale,
+    RandomTangents,
+    SmoothTangents,
+    AddPoints,
+    Merge,
+    CopyPointsAndOffset,
+    SortPointsX,
+    CreateShapeFromGroup,
+    CreateShapeFromAllGroups,
+    Translate,
+    RandomTranslate,
+    CopyPointsAndRandomOffset,
+    InstanceOnPoints,
+    ExtrudeShape,
+    GroupPoints
+}
+
 impl Graph<GeometryWorld> {
 
-    pub fn add_processor_node_by_type(&mut self, processor_type: &str) -> NodeHandle<GeometryWorld> {
+    pub fn add_processor_node_by_type(&mut self, processor_type: ProcessorType) -> NodeHandle<GeometryWorld> {
+        match processor_type {
+            ProcessorType::Empty => {
+                let node = Empty::new();
+                self.add_processor_node(Box::from(node))
+            }
+            ProcessorType::CreateRectangle => {
+                let node = CreateRectangle::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::ScatterPoints => {
+                let node = ScatterPoints::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::Scale => {
+                let node = Scale::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::RandomTangents => {
+                let node = RandomTangents::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::SmoothTangents => {
+                let node = SmoothTangents::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::AddPoints => {
+                let node = AddPoints::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::Merge => {
+                let node = Merge::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::CopyPointsAndOffset => {
+                let node = CopyPointsAndOffset::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::SortPointsX => {
+                let node = SortPointsX::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::CreateShapeFromGroup => {
+                let node = CreateShapeFromGroup::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::CreateShapeFromAllGroups => {
+                let node = CreateShapeFromAllGroups::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::Translate => {
+                let node = Translate::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::RandomTranslate => {
+                let node = RandomTranslate::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::CopyPointsAndRandomOffset => {
+                let node = CopyPointsAndRandomOffset::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::InstanceOnPoints => {
+                let node = InstanceOnPoints::new();
+                self.add_subgraph_processor_node(Box::from(node))
+            },
+            ProcessorType::ExtrudeShape => {
+                let node = ExtrudeShape::new();
+                self.add_processor_node(Box::from(node))
+            },
+            ProcessorType::GroupPoints => {
+                let node = GroupPoints::new();
+                self.add_processor_node(Box::from(node))
+            }
+        }        
+    }
+
+    pub fn add_processor_node_by_type_name(&mut self, processor_type: &str) -> NodeHandle<GeometryWorld> {
         match processor_type {
             "Empty" => {
                 let node = Empty::new();
